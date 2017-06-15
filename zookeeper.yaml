@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-svc
+  namespace: ephemeral-kafka
+spec:
+  ports:
+  - port: 2181
+    protocol: TCP
+  selector:
+    service: zookeeper
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: ephemeral-kafka
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: wurstmeister/zookeeper
+        ports:
+        - containerPort: 2181
+          protocol: TCP
+      restartPolicy: Always

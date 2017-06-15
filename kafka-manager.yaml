@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-manager-svc
+  namespace: ephemeral-kafka
+spec:
+  ports:
+  - port: 9000
+    protocol: TCP
+  selector:
+    service: kafka-manager
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kafka-manager
+  namespace: ephemeral-kafka
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: kafka-manager
+    spec:
+      containers:
+      - env:
+        - name: ZK_HOSTS
+          value: "zookeeper-svc:2181"
+        image: sheepkiller/kafka-manager
+        name: kafka-manager
+        ports:
+        - containerPort: 9000
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kafka-manager
+  namespace: ephemeral-kafka
+spec:
+  rules:
+  # any valid host for your ingress
+  - host: kafka-manager.demo.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: kafka-manager-svc
+          servicePort: 9000

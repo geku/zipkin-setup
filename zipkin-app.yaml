@@ -1,0 +1,81 @@
+#
+# Provides
+# UI: /
+# API: /api/v1
+# health: /health
+# metrics: /metrics
+# see https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tracing
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-svc
+  namespace: tracing
+spec:
+  ports:
+  - port: 9411
+    protocol: TCP
+    targetPort: 9411
+  selector:
+    app: zipkin-app
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zipkin-app
+  namespace: tracing
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zipkin-app
+    spec:
+      containers:
+      - name: zipkin
+        image: openzipkin/zipkin
+        env:
+        # Enable Kafka collector
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: kafka-svc.ephemeral-kafka:9092
+        - name: STORAGE_TYPE
+          value: mysql
+        - name: MYSQL_DB
+          value: zipkin
+        - name: MYSQL_USER
+          value: zipkin
+        - name: MYSQL_PASS
+          value: klj234jkhkj534bkfwl
+        - name: MYSQL_HOST
+          value: zipkin-mysql-svc
+        - name: MYSQL_TCP_PORT
+          value: "3306"
+          # COLLECTOR_SAMPLE_RATE: Percentage of traces to retain, defaults to always sample (1.0)
+        - name: COLLECTOR_SAMPLE_RATE
+          value: "1.0"
+        ports:
+        - containerPort: 9411
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: zipkin-ui
+  namespace: tracing
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  # any valid host for your ingress
+  - host: zipkin.demo.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: zipkin-svc
+          servicePort: 9411

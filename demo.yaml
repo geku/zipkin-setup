@@ -1,0 +1,58 @@
+#
+# Zipkin Demo App
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-demo
+  namespace: tracing
+  labels:
+    app: zipkin-demo
+spec:
+  ports:
+  - name: demo-svc
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: zipkin-demo
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zipkin-demo
+  namespace: tracing
+  labels:
+    app: zipki-demo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zipkin-demo
+    spec:
+      containers:
+      - name: demo-app
+        image: zipkin-demo
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: web
+          containerPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: zipkin-demo
+  namespace: tracing
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  # any valid host for your ingress
+  - host: demo.demo.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: demo-svc
+          servicePort: 8080

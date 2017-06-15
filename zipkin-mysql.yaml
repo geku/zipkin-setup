@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tracing
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-mysql-svc
+  namespace: tracing
+spec:
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    service: zipkin-mysql
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zipkin-mysql
+  namespace: tracing
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    service: zipkin-mysql
+spec:
+  containers:
+    - name: mysql
+      image: mysql:5.7
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: dsfoh234jhkjkfs
+        - name: MYSQL_USER
+          value: zipkin
+        - name: MYSQL_PASSWORD
+          value: klj234jkhkj534bkfwl
+        - name: MYSQL_DATABASE
+          value: zipkin
+      ports:
+        - name: client
+          containerPort: 3306
+          protocol: "TCP"
+      volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+  volumes:
+    - name: mysql-data
+      hostPath:
+        path: /var/lib/data/myslq/zipkin
