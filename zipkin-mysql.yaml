@@ -48,4 +48,4 @@ spec:
   volumes:
     - name: mysql-data
       hostPath:
-        path: /var/lib/data/myslq/zipkin
+        path: /var/lib/data/mysql/zipkin
